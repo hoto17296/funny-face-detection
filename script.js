@@ -1,6 +1,7 @@
 const resolution = { width: 1280, height: 720 } // 720p
 const fps = 10
 const modelUri = "https://cdn.hotolab.net/face-api.js/models"
+const threshold = 0.4
 
 const $video = document.querySelector("main > video")
 $video.width = resolution.width
@@ -9,6 +10,9 @@ $video.height = resolution.height
 $canvas = document.querySelector("main > canvas")
 $canvas.width = resolution.width
 $canvas.height = resolution.height
+
+const overlayImage = new Image()
+overlayImage.src = "overlay.png"
 
 const $device = document.getElementById("device")
 $device.addEventListener("change", async (event) => await setDevice(event.target.value))
@@ -48,6 +52,8 @@ $video.addEventListener("play", () => {
       faceapi.draw.drawFaceLandmarks($canvas, resizedDetections)
       faceapi.draw.drawFaceExpressions($canvas, resizedDetections)
     }
+    const surprised = resizedDetections.filter(face => face.expressions.surprised > threshold)
+    if (surprised.length > 0) ctx.drawImage(overlayImage, 0, 0, resolution.width, resolution.height)
   }, 1000 / fps)
 })
 
