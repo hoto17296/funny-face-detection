@@ -1,19 +1,23 @@
 const resolution = { width: 1280, height: 720 } // 720p
+const fps = 10
+const modelUri = "https://cdn.hotolab.net/face-api.js/models"
 
-$main = document.getElementsByTagName("main")[0]
-$footer = document.getElementsByTagName("footer")[0]
-
-const $video = document.getElementsByTagName("video")[0]
+const $video = document.querySelector("main > video")
 $video.width = resolution.width
 $video.height = resolution.height
 
-const $device = document.createElement("select")
+$canvas = document.querySelector("main > canvas")
+$canvas.width = resolution.width
+$canvas.height = resolution.height
+
+const $device = document.getElementById("device")
 $device.addEventListener("change", async (event) => await setDevice(event.target.value))
+
+const $debug = document.getElementById("debug")
 
 async function init() {
   const devices = (await navigator.mediaDevices.enumerateDevices()).filter(device => device.kind == "videoinput")
   if (devices.length == 0) throw new Exception("Video device is not detected")
-  $footer.append($device)
   devices.forEach(device => {
     const $option = document.createElement("option")
     $option.value = device.deviceId
@@ -21,10 +25,30 @@ async function init() {
     $device.append($option)
   })
   await setDevice(devices[0].deviceId)
+  await Promise.all([
+    faceapi.nets.tinyFaceDetector.loadFromUri(modelUri),
+    faceapi.nets.faceLandmark68Net.loadFromUri(modelUri),
+    faceapi.nets.faceExpressionNet.loadFromUri(modelUri),
+  ])
 }
 
 async function setDevice(deviceId) {
   $video.srcObject = await navigator.mediaDevices.getUserMedia({ video: { deviceId, ...resolution } })
 }
+
+$video.addEventListener("play", () => {
+  const ctx = $canvas.getContext("2d")
+  faceapi.matchDimensions($canvas, resolution)
+  setInterval(async () => {
+    const detections = await faceapi.detectAllFaces($video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions()
+    const resizedDetections = faceapi.resizeResults(detections, resolution)
+    ctx.clearRect(0, 0, resolution.width, resolution.height)
+    if ($debug.checked) {
+      faceapi.draw.drawDetections($canvas, resizedDetections)
+      faceapi.draw.drawFaceLandmarks($canvas, resizedDetections)
+      faceapi.draw.drawFaceExpressions($canvas, resizedDetections)
+    }
+  }, 1000 / fps)
+})
 
 init().catch(err => console.error(err))

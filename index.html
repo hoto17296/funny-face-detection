@@ -7,14 +7,33 @@
 
   <title>Funny Face Detection</title>
 
+  <script src="//cdn.hotolab.net/face-api.js/face-api.min.js"></script>
   <script defer src="script.js"></script>
+  <style>
+    main {
+      position: relative;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  </style>
 </head>
 
 <body>
   <main>
     <video autoplay muted></video>
+    <canvas></canvas>
   </main>
-  <footer></footer>
+  <footer>
+    <select id="device"></select>
+    <label>
+      <input id="debug" type="checkbox" />
+      Debug
+    </label>
+  </footer>
 </body>
 
 </html>
