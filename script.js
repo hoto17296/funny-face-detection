@@ -20,8 +20,8 @@ $device.addEventListener("change", async (event) => await setDevice(event.target
 const $debug = document.getElementById("debug")
 
 async function init() {
+  await navigator.mediaDevices.getUserMedia({ video: true }) // request permission
   const devices = (await navigator.mediaDevices.enumerateDevices()).filter(device => device.kind == "videoinput")
-  if (devices.length == 0) throw new Exception("Video device is not detected")
   devices.forEach(device => {
     const $option = document.createElement("option")
     $option.value = device.deviceId
